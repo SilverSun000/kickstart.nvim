@@ -476,8 +476,6 @@ require('lazy').setup({
     },
   },
 
-  { 'mfussenegger/nvim-jdtls' },
-
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
@@ -628,7 +626,6 @@ require('lazy').setup({
           end
         end,
       })
-
 
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
