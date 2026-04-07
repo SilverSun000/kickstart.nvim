@@ -543,6 +543,13 @@ require('lazy').setup({
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
+          -- RUFF tweak
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if client and client.name == 'ruff' then
+            -- Disable hover in favor of Pyright
+            client.server_capabilities.hoverProvider = false
+          end
+
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
           map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
@@ -691,6 +698,9 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
         --
+        pyright = {},
+
+        ruff = {},
 
         lua_ls = {
           -- cmd = { ... },
@@ -1029,3 +1039,18 @@ vim.g.compile_mode = {
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+vim.api.nvim_create_autocmd('BufWritePre', {
+  callback = function(event)
+    -- This runs the LSP formatting synchronously before the file writes to disk
+    vim.lsp.buf.format { bufnr = event.buf, async = false }
+
+    local ruff_client = vim.lsp.get_clients({ name = 'ruff', bufnr = event.buf })[1]
+    if ruff_client then
+      vim.lsp.buf.code_action {
+        context = { only = { 'source.fixAll.ruff' }, diagnostics = {} },
+        apply = true,
+      }
+    end
+  end,
+})
